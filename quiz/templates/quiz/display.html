@@ -1,0 +1,75 @@
+{% extends 'quiz/base.html' %}
+
+{% block page_content %}
+<div class="container">
+<h1>Quiz: {{ quiz.name }}</h1>
+
+<section class="question">
+{% if question %}
+<form id="question-form" action="{% url 'quiz:grade_question' question.id %}" method="post">
+    {% csrf_token %}
+
+    <fieldset class="form-group">
+        <legend>{{ question.prompt }}</legend>
+        {% for choice in question.multiplechoiceanswer.choices %}
+        <div class="radio">
+        <label>
+            <input type="radio" class="answer-radio" name="answer" value="{{ choice }}">
+            {{ choice}}
+        </label>
+        </div>
+        {% endfor %}
+    </fieldset>
+    <button type="submit" id="submit-btn" class="btn btn-primary d-none">Отправить ответ</button>
+</form>
+
+<div id="question-feedback" style="margin-top:16px">
+</div>
+{% else %}
+Sorry, that question doesn't exist in this quiz.
+{% endif %}
+</section>
+
+{% if next_question %}
+<div style="margin-top:12px; font-size:16px" class="d-none" id="next-question">
+<a href="{% url 'quiz:test_groups' quiz.test_group.slug %}?question={{ next_question.id }}">Следующий вопрос →</a>
+</div>
+{% endif %}
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+    const answerRadioList = document.querySelectorAll('.answer-radio')
+    answerRadioList.forEach(radio => {
+        radio.addEventListener('change', event => {
+            const submitBtn = document.getElementById('submit-btn')
+            submitBtn.classList.remove('d-none')
+        })
+    })
+})
+
+const form = document.getElementById("question-form");
+form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    document.getElementById('submit-btn').disabled = true
+    fetchAnswer(form)
+});
+
+async function fetchAnswer(form) {
+    const response = await fetch(form.action, {method:'post', body: new FormData(form)});
+    if (response.status === 200) {
+
+        document.getElementById("question-feedback").innerHTML = await response.text();
+        const nextQuestion = document.getElementById("next-question");
+
+        if (nextQuestion) {
+            nextQuestion.classList.remove('d-none')
+        }
+    } else {
+        document.getElementById("question-feedback").innerHTML = await response.text();
+    }
+}
+
+</script>
+{% endblock %}

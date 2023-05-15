@@ -1,0 +1,18 @@
+{% extends 'quiz/base.html' %}
+
+{% block page_content %}
+
+<div class="container">
+    <h1>Группы тестов</h1>
+{% if group_list %}
+<ul>
+{% for group in group_list %}
+    <li><a href="{% url 'quiz:test_groups' group.slug %}">{{ group.name }}</a></li>
+{% endfor %}
+</ul>
+{% else %}
+    <p>Группы не созданы</p>
+{% endif %}
+</div>
+
+{% endblock %}
